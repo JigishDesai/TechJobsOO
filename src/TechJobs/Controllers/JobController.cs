@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using TechJobs.Data;
+using TechJobs.Models;
 using TechJobs.ViewModels;
 
 namespace TechJobs.Controllers
@@ -20,7 +22,16 @@ namespace TechJobs.Controllers
         {
             // TODO #1 - get the Job with the given ID and pass it into the view
 
-            return View();
+            Job singleJob = jobData.Find(id);
+            NewJobViewModel actualJob = new NewJobViewModel();
+
+            actualJob.Name = singleJob.Name;
+            actualJob.EmployerID = singleJob.Employer.ID;
+            actualJob.CoreCompetencyID = singleJob.CoreCompetency.ID;
+            actualJob.LocationID = singleJob.Location.ID;
+            actualJob.PositionTypeID = singleJob.PositionType.ID;
+
+            return View(singleJob);
         }
 
         public IActionResult New()
@@ -36,7 +47,24 @@ namespace TechJobs.Controllers
             // new Job and add it to the JobData data store. Then
             // redirect to the Job detail (Index) action/view for the new Job.
 
+            if (ModelState.IsValid)
+            {
+                Job newJob = new Job
+                {
+                    Name = newJobViewModel.Name,
+                    Employer = jobData.Employers.Find(newJobViewModel.EmployerID),
+                    Location = jobData.Locations.Find(newJobViewModel.LocationID),
+                    CoreCompetency = jobData.CoreCompetencies.Find(newJobViewModel.CoreCompetencyID),
+                    PositionType = jobData.PositionTypes.Find(newJobViewModel.PositionTypeID)
+                };
+
+                jobData.Jobs.Add(newJob);
+
+                return Redirect(String.Format("/job?id={0}", newJob.ID));
+            }
+
             return View(newJobViewModel);
+
         }
     }
 }
